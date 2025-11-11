@@ -1,0 +1,10 @@
+body {
+  font-family: system-ui, sans-serif;
+  text-align: center;
+  background-color: #fafafa;
+  color: #333;
+}
+canvas {
+  max-width: 600px;
+  margin: 2rem auto;
+}

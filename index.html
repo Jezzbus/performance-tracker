@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>2366 KVK Performance Data</title>
   <link rel="stylesheet" href="style.css">
-  <!-- Google Fonts for a fantasy/RoK vibe -->
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -15,15 +14,17 @@
   <div id="summary">
     <p>Total Kills: <span id="totalKills">0</span></p>
     <p>Total Deads: <span id="totalDeads">0</span></p>
-    <p>Total KP gained (T4 + T5): <span id="totalKP">0</span></p>
+    <p>Total Kill Points gained: <span id="totalKP">0</span></p>
   </div>
 
   <div id="charts">
-    <canvas id="kpChart" width="400" height="200"></canvas>
-    <canvas id="killsChart" width="400" height="200"></canvas>
+    <canvas id="requirementsChart"></canvas>
+    <canvas id="startingPowerChart"></canvas>
+    <canvas id="killsChart"></canvas>
+    <canvas id="deadsChart"></canvas>
   </div>
 
-  <input type="text" id="searchInput" placeholder="Search table..." />
+  <input type="text" id="searchInput" placeholder="Search player..." />
   <div id="tableContainer"></div>
 
   <!-- Libraries -->

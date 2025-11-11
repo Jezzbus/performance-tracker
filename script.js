@@ -1,7 +1,6 @@
 const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ9YnXKGt3I1uXjQprT1UfhVFL7tXW_pWwsJI0CfQdE-vAGVxl8vtaKcK1WMvtl4-RUu9gurcs8p8m1/pub?gid=0&single=true&output=csv';
 
-let kpChartInstance = null;
-let killsChartInstance = null;
+let charts = {};
 
 async function fetchSheetData() {
   try {
@@ -14,7 +13,7 @@ async function fetchSheetData() {
     renderSummary(rows, headers);
     renderTable(headers, rows);
     renderCharts(headers, rows);
-    enableSearch();
+    enableSearch(headers, rows);
   } catch (err) {
     console.error("Error loading sheet:", err);
     document.getElementById('tableContainer').innerHTML =
@@ -27,18 +26,18 @@ function parseNumber(str) {
   return parseFloat(str.replace(/,/g, '').trim()) || 0;
 }
 
+// Render summary using proper Kill Points column (7th column)
 function renderSummary(rows, headers) {
   const killsCol = headers.find(h => /total kills/i.test(h));
   const deadsCol = headers.find(h => /total deads/i.test(h));
-  const t4Col = headers.find(h => /T4/i.test(h));
-  const t5Col = headers.find(h => /T5/i.test(h));
+  const kpCol = headers[6]; // 7th column, 0-based index
 
   let totalKills = 0, totalDeads = 0, totalKP = 0;
 
   rows.forEach(r => {
     totalKills += parseNumber(r[killsCol]);
     totalDeads += parseNumber(r[deadsCol]);
-    totalKP += parseNumber(r[t4Col]) + parseNumber(r[t5Col]);
+    totalKP += parseNumber(r[kpCol]);
   });
 
   document.getElementById('totalKills').innerText = totalKills.toLocaleString();
@@ -47,7 +46,7 @@ function renderSummary(rows, headers) {
 }
 
 function renderTable(headers, rows) {
-  const colsToShow = [...Array(14).keys()].concat([17]); // cols 1–14 + 18
+  const colsToShow = [...Array(14).keys()].concat([17]); // 1–14 + column 18 (%)
 
   let html = '<table><thead><tr>';
   colsToShow.forEach(i => {
@@ -61,12 +60,13 @@ function renderTable(headers, rows) {
     html += '<tr>';
     colsToShow.forEach(i => {
       let cell = r[headers[i]] || '';
+      // Column 18 (% Requirements) – format with 2 decimals
       if (i === 17) {
-        const num = parseNumber(cell);
-        cell = (num * 100).toFixed(2) + '%';
+        cell = parseNumber(cell).toFixed(2) + '%';
       } else {
-        const num = parseNumber(cell);
-        if (!isNaN(num)) cell = num.toLocaleString();
+        // Only numeric columns get commas; text and IDs remain raw
+        const numericCols = [6, /* Kill Points */ 9, 10, 11, 12, 13]; // example numeric columns
+        if (numericCols.includes(i)) cell = parseNumber(cell).toLocaleString();
       }
       html += `<td>${cell}</td>`;
     });
@@ -77,39 +77,48 @@ function renderTable(headers, rows) {
   document.getElementById('tableContainer').innerHTML = html;
 }
 
-function renderCharts(headers, rows) {
-  const dateCol = headers[0];
-  const t4Col = headers.find(h => /T4/i.test(h));
-  const t5Col = headers.find(h => /T5/i.test(h));
-  const killsCol = headers.find(h => /total kills/i.test(h));
+// Render charts dynamically filtered by player search
+function renderCharts(headers, rows, playerFilter = '') {
+  const filteredRows = playerFilter
+    ? rows.filter(r => r[headers[1]] && r[headers[1]].toLowerCase().includes(playerFilter.toLowerCase()))
+    : rows;
 
-  const labels = rows.map(r => r[dateCol]);
-  const kpData = rows.map(r => parseNumber(r[t4Col]) + parseNumber(r[t5Col]));
-  const killsData = rows.map(r => parseNumber(r[killsCol]));
+  const labels = filteredRows.map(r => r[headers[0]] || ''); // e.g., date or entry
+  const requirementsData = filteredRows.map(r => parseNumber(r[headers[17]])); // % Requirements
+  const startingPowerData = filteredRows.map(r => parseNumber(r[headers[5]])); // Starting Power column index
+  const killsData = filteredRows.map(r => parseNumber(r[headers.findIndex(h => /total kills/i.test(h))]));
+  const deadsData = filteredRows.map(r => parseNumber(r[headers.findIndex(h => /total deads/i.test(h))]));
 
-  if (kpChartInstance) kpChartInstance.destroy();
-  const ctxKP = document.getElementById('kpChart').getContext('2d');
-  kpChartInstance = new Chart(ctxKP, {
-    type: 'line',
-    data: { labels, datasets: [{ label: 'KP gained (T4+T5)', data: kpData, borderColor: 'blue', backgroundColor: 'rgba(0,0,255,0.1)', tension: 0.3 }] },
-    options: { responsive: true, scales: { y: { beginAtZero: true } }, plugins: { title: { display: true, text: 'KP gained over time' } } }
-  });
+  // Chart helper
+  function createOrUpdateChart(id, label, data, type='line', color='blue') {
+    if (charts[id]) charts[id].destroy();
+    const ctx = document.getElementById(id).getContext('2d');
+    charts[id] = new Chart(ctx, {
+      type,
+      data: { labels, datasets: [{ label, data, backgroundColor: color, borderColor: color }] },
+      options: { responsive: true, scales: { y: { beginAtZero: true } }, plugins: { legend: { display: true } } }
+    });
+  }
 
-  if (killsChartInstance) killsChartInstance.destroy();
-  const ctxKills = document.getElementById('killsChart').getContext('2d');
-  killsChartInstance = new Chart(ctxKills, {
-    type: 'bar',
-    data: { labels, datasets: [{ label: 'Total Kills', data: killsData, backgroundColor: 'green' }] },
-    options: { responsive: true, scales: { y: { beginAtZero: true } }, plugins: { title: { display: true, text: 'Total Kills per entry' } } }
-  });
+  createOrUpdateChart('requirementsChart', '% Requirements Met', requirementsData, 'line', 'orange');
+  createOrUpdateChart('startingPowerChart', 'Starting Power', startingPowerData, 'line', 'purple');
+  createOrUpdateChart('killsChart', 'Total Kills', killsData, 'bar', 'green');
+  createOrUpdateChart('deadsChart', 'Total Deads', deadsData, 'bar', 'red');
 }
 
-function enableSearch() {
+// Search box filters table AND updates charts
+function enableSearch(headers, rows) {
   const input = document.getElementById('searchInput');
   input.addEventListener('keyup', () => {
     const filter = input.value.toLowerCase();
-    const rows = document.querySelectorAll('tbody tr');
-    rows.forEach(row => row.style.display = row.innerText.toLowerCase().includes(filter) ? '' : 'none');
+    const tableRows = document.querySelectorAll('tbody tr');
+
+    tableRows.forEach(row => {
+      const text = row.innerText.toLowerCase();
+      row.style.display = text.includes(filter) ? '' : 'none';
+    });
+
+    renderCharts(headers, rows, filter);
   });
 }
 

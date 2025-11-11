@@ -1,35 +1,32 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>2366 KVK Performance Data</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2366 KVK Performance Tracker</title>
   <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
-  <header id="pageHeader">
-    <h1 id="mainTitle">2369 KVK Performance Data</h1>
+  <header>
+    <h1>2369 KVK Performance Tracker</h1>
   </header>
 
-  <div id="summary">
-    <p>Total Kills: <span id="totalKills">0</span></p>
-    <p>Total Deads: <span id="totalDeads">0</span></p>
-    <p>Total Kill Points gained: <span id="totalKP">0</span></p>
-  </div>
+  <section id="searchSection">
+    <input type="text" id="searchInput" placeholder="Search by player...">
+  </section>
 
-  <div id="charts">
-    <canvas id="requirementsChart"></canvas>
+  <section id="charts">
     <canvas id="startingPowerChart"></canvas>
     <canvas id="killsChart"></canvas>
     <canvas id="deadsChart"></canvas>
-  </div>
+    <canvas id="killPointsChart"></canvas>
+    <canvas id="requirementsChart"></canvas>
+  </section>
 
-  <input type="text" id="searchInput" placeholder="Search player..." />
-  <div id="tableContainer"></div>
+  <section id="tableContainer"></section>
 
-  <!-- Libraries -->
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

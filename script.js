@@ -30,9 +30,14 @@ function renderSummary(rows, headers) {
   let totalKP = 0;
 
   rows.forEach(r => {
-    totalKills += parseFloat(r[killsIndex]) || 0;
-    totalDeads += parseFloat(r[deadsIndex]) || 0;
-    totalKP += (parseFloat(r[t4Index]) || 0) + (parseFloat(r[t5Index]) || 0);
+    const kills = parseFloat((r[killsIndex] || '0').replace(/,/g, '').trim()) || 0;
+    const deads = parseFloat((r[deadsIndex] || '0').replace(/,/g, '').trim()) || 0;
+    const t4 = parseFloat((r[t4Index] || '0').replace(/,/g, '').trim()) || 0;
+    const t5 = parseFloat((r[t5Index] || '0').replace(/,/g, '').trim()) || 0;
+
+    totalKills += kills;
+    totalDeads += deads;
+    totalKP += t4 + t5;
   });
 
   document.getElementById('totalKills').innerText = totalKills;
@@ -41,13 +46,31 @@ function renderSummary(rows, headers) {
 }
 
 function renderTable(headers, rows) {
+  // Indices of columns to show
+  const colsToShow = [...Array(14).keys()] // 0–13
+    .concat([17]); // column 18 (0-based index)
+
   let html = '<table><thead><tr>';
-  headers.forEach(h => html += `<th>${h}</th>`);
+  colsToShow.forEach(i => {
+    let header = headers[i];
+    if (i === 17) header += ' (%)'; // rename column 18
+    html += `<th>${header}</th>`;
+  });
   html += '</tr></thead><tbody>';
 
   rows.forEach(r => {
     html += '<tr>';
-    r.forEach(cell => html += `<td>${cell}</td>`);
+    colsToShow.forEach(i => {
+      let cell = r[i] || '';
+      if (i === 17) { // format as percentage
+        const num = parseFloat(cell.replace(/,/g, '').trim()) || 0;
+        cell = num.toFixed(2) + '%';
+      } else { // format numeric columns nicely
+        const n = parseFloat(cell.replace(/,/g, '').trim());
+        if (!isNaN(n)) cell = n;
+      }
+      html += `<td>${cell}</td>`;
+    });
     html += '</tr>';
   });
 

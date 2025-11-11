@@ -12,7 +12,7 @@ async function fetchSheetData() {
 
     renderSummary(rows, headers);
     renderTable(headers, rows);
-    renderCharts(headers, rows);
+    renderCharts(headers, rows); 
     enableSearch(headers, rows);
   } catch (err) {
     console.error("Error loading sheet:", err);
@@ -30,7 +30,7 @@ function parseNumber(str) {
 function renderSummary(rows, headers) {
   const killsCol = headers.find(h => /total kills/i.test(h));
   const deadsCol = headers.find(h => /total deads/i.test(h));
-  const kpCol = headers[6]; // 7th column, 0-based index
+  const kpCol = headers[6]; // 7th column
 
   let totalKills = 0, totalDeads = 0, totalKP = 0;
 
@@ -60,12 +60,11 @@ function renderTable(headers, rows) {
     html += '<tr>';
     colsToShow.forEach(i => {
       let cell = r[headers[i]] || '';
-      // Column 18 (% Requirements) – format with 2 decimals
       if (i === 17) {
-        cell = parseNumber(cell).toFixed(2) + '%';
+        cell = parseNumber(cell).toFixed(0) + '%'; // 0 decimals
       } else {
-        // Only numeric columns get commas; text and IDs remain raw
-        const numericCols = [6, /* Kill Points */ 9, 10, 11, 12, 13]; // example numeric columns
+        // only numeric columns formatted
+        const numericCols = [6, 9, 10, 11, 12, 13]; 
         if (numericCols.includes(i)) cell = parseNumber(cell).toLocaleString();
       }
       html += `<td>${cell}</td>`;
@@ -77,19 +76,14 @@ function renderTable(headers, rows) {
   document.getElementById('tableContainer').innerHTML = html;
 }
 
-// Render charts dynamically filtered by player search
-function renderCharts(headers, rows, playerFilter = '') {
-  const filteredRows = playerFilter
-    ? rows.filter(r => r[headers[1]] && r[headers[1]].toLowerCase().includes(playerFilter.toLowerCase()))
-    : rows;
+// Render charts initially based on entire dataset
+function renderCharts(headers, rows) {
+  const labels = rows.map(r => r[headers[0]] || '');
+  const requirementsData = rows.map(r => parseNumber(r[headers[17]]));
+  const startingPowerData = rows.map(r => parseNumber(r[headers[5]]));
+  const killsData = rows.map(r => parseNumber(r[headers.findIndex(h => /total kills/i.test(h))]));
+  const deadsData = rows.map(r => parseNumber(r[headers.findIndex(h => /total deads/i.test(h))]));
 
-  const labels = filteredRows.map(r => r[headers[0]] || ''); // e.g., date or entry
-  const requirementsData = filteredRows.map(r => parseNumber(r[headers[17]])); // % Requirements
-  const startingPowerData = filteredRows.map(r => parseNumber(r[headers[5]])); // Starting Power column index
-  const killsData = filteredRows.map(r => parseNumber(r[headers.findIndex(h => /total kills/i.test(h))]));
-  const deadsData = filteredRows.map(r => parseNumber(r[headers.findIndex(h => /total deads/i.test(h))]));
-
-  // Chart helper
   function createOrUpdateChart(id, label, data, type='line', color='blue') {
     if (charts[id]) charts[id].destroy();
     const ctx = document.getElementById(id).getContext('2d');
@@ -106,19 +100,50 @@ function renderCharts(headers, rows, playerFilter = '') {
   createOrUpdateChart('deadsChart', 'Total Deads', deadsData, 'bar', 'red');
 }
 
-// Search box filters table AND updates charts
+// Search filters table AND updates all charts dynamically
 function enableSearch(headers, rows) {
   const input = document.getElementById('searchInput');
   input.addEventListener('keyup', () => {
     const filter = input.value.toLowerCase();
     const tableRows = document.querySelectorAll('tbody tr');
 
+    let filteredData = [];
+
     tableRows.forEach(row => {
       const text = row.innerText.toLowerCase();
-      row.style.display = text.includes(filter) ? '' : 'none';
+      const isVisible = text.includes(filter);
+      row.style.display = isVisible ? '' : 'none';
+
+      if (isVisible) {
+        const cells = row.querySelectorAll('td');
+        filteredData.push(Array.from(cells).map(td => td.innerText));
+      }
     });
 
-    renderCharts(headers, rows, filter);
+    // Update charts based on filteredData
+    if (filteredData.length === 0) return;
+
+    const labels = filteredData.map(r => r[0]);
+    const requirementsData = filteredData.map(r => parseNumber(r[r.length - 1])); // last column (%)
+    const startingPowerData = filteredData.map(r => parseNumber(r[5])); // Starting Power
+    const killsData = filteredData.map(r => parseNumber(r[6])); // Total Kills
+    const deadsData = filteredData.map(r => parseNumber(r[7])); // Total Deads
+
+    charts['requirementsChart'].data.labels = labels;
+    charts['requirementsChart'].data.datasets[0].data = requirementsData;
+    charts['requirementsChart'].update();
+
+    charts['startingPowerChart'].data.labels = labels;
+    charts['startingPowerChart'].data.datasets[0].data = startingPowerData;
+    charts['startingPowerChart'].update();
+
+    charts['killsChart'].data.labels = labels;
+    charts['killsChart'].data.datasets[0].data = killsData;
+    charts['killsChart'].update();
+
+    charts['deadsChart'].data.labels = labels;
+    charts['deadsChart'].data.datasets[0].data = deadsData;
+    charts['deadsChart'].update();
   });
 }
 

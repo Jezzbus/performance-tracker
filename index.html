@@ -2,11 +2,15 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Performance Tracker</title>
+  <title>2366 KVK Performance Data</title>
   <link rel="stylesheet" href="style.css">
+  <!-- Google Fonts for a fantasy/RoK vibe -->
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <h1>📊 2369 KVK Performance Dashboard</h1>
+  <header id="pageHeader">
+    <h1 id="mainTitle">2369 KVK Performance Data</h1>
+  </header>
 
   <div id="summary">
     <p>Total Kills: <span id="totalKills">0</span></p>
@@ -14,11 +18,17 @@
     <p>Total KP gained (T4 + T5): <span id="totalKP">0</span></p>
   </div>
 
-  <input type="text" id="searchInput" placeholder="Search table..." />
+  <div id="charts">
+    <canvas id="kpChart" width="400" height="200"></canvas>
+    <canvas id="killsChart" width="400" height="200"></canvas>
+  </div>
 
+  <input type="text" id="searchInput" placeholder="Search table..." />
   <div id="tableContainer"></div>
 
+  <!-- Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
-

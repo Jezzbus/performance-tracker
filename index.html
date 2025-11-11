@@ -2,13 +2,22 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Performance Dashboard</title>
+  <title>Performance Tracker</title>
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <h1>Performance Tracker</h1>
-  <canvas id="progressChart" width="400" height="200"></canvas>
+  <h1>📊 Performance Dashboard</h1>
+
+  <div id="summary">
+    <p>Total Kills: <span id="totalKills">0</span></p>
+    <p>Total Deads: <span id="totalDeads">0</span></p>
+    <p>Total KP gained (T4 + T5): <span id="totalKP">0</span></p>
+  </div>
+
+  <input type="text" id="searchInput" placeholder="Search table..." />
+
+  <div id="tableContainer"></div>
+
   <script src="script.js"></script>
 </body>
 </html>

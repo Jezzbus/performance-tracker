@@ -1,14 +1,19 @@
 const sheetURL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vTFxMhXLR6U8OesXQdRPTpDJ9kFuY1DP6DlWqmvW9wj3w_a6LIp34ssknkkQgDb0RlcnnJpl1BV1nI6/pub?output=csv";
 
-const CYAN = "rgba(0, 180, 200, 0.8)";
+const CYAN = "rgba(0, 180, 200, 0.85)";
 let charts = {};
 let allRows = [];
 let headers = [];
 
+/* ---------- Utilities ---------- */
+
 function parseNumber(v) {
-  return parseFloat((v || "0").toString().replace(/,/g, "")) || 0;
+  if (!v) return 0;
+  return parseFloat(v.toString().replace(/,/g, "").replace("%", "")) || 0;
 }
+
+/* ---------- Fetch ---------- */
 
 fetch(sheetURL)
   .then(r => r.text())
@@ -35,15 +40,13 @@ function renderTable(rows) {
         <input type="checkbox" class="rowCheck" checked>
       </td>`;
 
-    headers.forEach((h, idx) => {
+    headers.forEach(h => {
       let val = row[h] || "";
 
-      if ([3, 8, 9, 12].includes(idx)) {
-        val = parseNumber(val).toLocaleString();
-      }
-
-      if (idx === 17) {
+      if (typeof val === "string" && val.includes("%")) {
         val = parseNumber(val).toFixed(0) + "%";
+      } else if (!isNaN(parseNumber(val)) && val !== "") {
+        val = parseNumber(val).toLocaleString();
       }
 
       html += `<td>${val}</td>`;
@@ -60,7 +63,7 @@ function renderTable(rows) {
   );
 }
 
-/* ---------- SELECTION ---------- */
+/* ---------- Selection ---------- */
 
 function getSelectedRows() {
   return [...document.querySelectorAll("tbody tr")]
@@ -73,7 +76,7 @@ function updateFromSelection() {
   updateCharts(selected.length ? selected : []);
 }
 
-/* ---------- SEARCH ---------- */
+/* ---------- Search ---------- */
 
 function enableSearch() {
   const input = document.getElementById("searchInput");
@@ -91,22 +94,33 @@ function enableSearch() {
   });
 }
 
-/* ---------- CHARTS ---------- */
+/* ---------- Aggregation (BY COLUMN NAME) ---------- */
 
-function sum(rows) {
+function aggregate(rows) {
+  const sum = (col) =>
+    rows.reduce((a, r) => a + parseNumber(r[col]), 0);
+
+  const avgPercent = (col) => {
+    if (!rows.length) return 0;
+    const total = rows.reduce((a, r) => {
+      let v = parseNumber(r[col]);
+      return a + (v > 1 ? v : v * 100);
+    }, 0);
+    return total / rows.length;
+  };
+
   return {
-    startingPower: rows.reduce((a, r) => a + parseNumber(Object.values(r)[3]), 0),
-    kills: rows.reduce((a, r) => a + parseNumber(Object.values(r)[8]), 0),
-    killPoints: rows.reduce((a, r) => a + parseNumber(Object.values(r)[9]), 0),
-    deads: rows.reduce((a, r) => a + parseNumber(Object.values(r)[12]), 0),
-    requirements:
-      rows.length
-        ? rows.reduce((a, r) => a + parseNumber(Object.values(r)[17]), 0) / rows.length
-        : 0
+    startingPower: sum("Starting Power"),
+    kills: sum("Total Kills"),
+    killPoints: sum("Kill Points gained (T4 + T5 only)"),
+    deads: sum("Total Deads"),
+    requirements: avgPercent("% of Requirements Complete")
   };
 }
 
-function draw(id, label, value, percent = false) {
+/* ---------- Charts ---------- */
+
+function drawChart(id, label, value, percent = false) {
   if (charts[id]) charts[id].destroy();
 
   charts[id] = new Chart(document.getElementById(id), {
@@ -120,11 +134,23 @@ function draw(id, label, value, percent = false) {
       }]
     },
     options: {
+      responsive: true,
       scales: {
         y: {
           beginAtZero: true,
           ticks: {
-            callback: v => percent ? `${v}%` : v.toLocaleString()
+            callback: v =>
+              percent ? `${v.toFixed(0)}%` : v.toLocaleString()
+          }
+        }
+      },
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: ctx =>
+              percent
+                ? `${ctx.raw.toFixed(0)}%`
+                : ctx.raw.toLocaleString()
           }
         }
       }
@@ -133,11 +159,11 @@ function draw(id, label, value, percent = false) {
 }
 
 function updateCharts(rows) {
-  const t = sum(rows);
+  const t = aggregate(rows);
 
-  draw("startingPowerChart", "Starting Power", t.startingPower);
-  draw("killsChart", "Total Kills", t.kills);
-  draw("killPointsChart", "Kill Points", t.killPoints);
-  draw("deadsChart", "Total Deads", t.deads);
-  draw("requirementsChart", "% Requirements Met", t.requirements, true);
+  drawChart("startingPowerChart", "Starting Power", t.startingPower);
+  drawChart("killsChart", "Total Kills", t.kills);
+  drawChart("killPointsChart", "Kill Points Gained", t.killPoints);
+  drawChart("deadsChart", "Total Deads", t.deads);
+  drawChart("requirementsChart", "% Requirements Met", t.requirements, true);
 }

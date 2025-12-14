@@ -28,23 +28,24 @@ header h1 {
   border: 1px solid #ccc;
 }
 
+/* ---------- Charts ---------- */
 #charts {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
-  justify-content: space-around;
+  justify-content: center;
   margin-bottom: 2rem;
 }
 
 canvas {
-  max-width: 400px;   /* fixed width like before */
-  max-height: 240px;  /* fixed height */
-  flex: 1 1 400px;    
+  width: 300px;    /* fixed width */
+  height: 200px;   /* fixed height */
+  flex: 0 0 auto;  /* prevent stretching */
 }
 
 /* ---------- Table ---------- */
 #tableContainer {
-  overflow-x: auto; /* horizontal scroll on mobile */
+  overflow-x: auto; /* horizontal scroll for mobile */
   -webkit-overflow-scrolling: touch;
   margin-bottom: 2rem;
 }
@@ -54,7 +55,7 @@ table {
   border-collapse: collapse;
   background: white;
   table-layout: fixed;
-  min-width: 800px; /* ensures table doesn’t collapse too small */
+  min-width: 800px;
 }
 
 th, td {
@@ -73,7 +74,7 @@ th {
 }
 
 td {
-  white-space: nowrap;         /* prevent wrapping of numeric/data cells */
+  white-space: nowrap;         /* prevent numeric/data wrapping */
 }
 
 td.numeric {

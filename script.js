@@ -1,4 +1,113 @@
-// same fetch, parsing, table, search, selection code as before
+const sheetURL =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTFxMhXLR6U8OesXQdRPTpDJ9kFuY1DP6DlWqmvW9wj3w_a6LIp34ssknkkQgDb0RlcnnJpl1BV1nI6/pub?output=csv";
+
+const CYAN = "rgba(0, 180, 200, 0.85)";
+let charts = {};
+let allRows = [];
+let headers = [];
+
+function parseNumber(v) {
+  if (!v) return 0;
+  return parseFloat(v.toString().replace(/,/g, "").replace("%", "")) || 0;
+}
+
+/* ---------- Fetch data ---------- */
+fetch(sheetURL)
+  .then(r => r.text())
+  .then(csv => {
+    const parsed = Papa.parse(csv, { header: true, skipEmptyLines: true });
+    headers = parsed.meta.fields;
+    allRows = parsed.data;
+    renderTable(allRows);
+    updateCharts(allRows);
+    enableSearch();
+  });
+
+/* ---------- Table ---------- */
+function renderTable(rows) {
+  let html = "<table><thead><tr><th>Select</th>";
+
+  headers.forEach(h => html += `<th>${h}</th>`);
+  html += "</tr></thead><tbody>";
+
+  const numericColumns = [
+    "Starting Power",
+    "Total Kills",
+    "Kill Points gained (T4 + T5 only)",
+    "Total Deads"
+  ];
+
+  rows.forEach((row, i) => {
+    html += `<tr data-index="${i}">
+      <td class="checkbox-cell">
+        <input type="checkbox" class="rowCheck" checked>
+      </td>`;
+
+    headers.forEach(h => {
+      let val = row[h] || "";
+      let tdClass = numericColumns.includes(h) ? "numeric" : "text";
+
+      if (numericColumns.includes(h)) {
+        val = parseNumber(val).toLocaleString();
+      }
+
+      html += `<td class="${tdClass}">${val}</td>`;
+    });
+
+    html += "</tr>";
+  });
+
+  html += "</tbody></table>";
+  document.getElementById("tableContainer").innerHTML = html;
+
+  document.querySelectorAll(".rowCheck").forEach(cb =>
+    cb.addEventListener("change", updateFromSelection)
+  );
+}
+
+/* ---------- Selection ---------- */
+function getSelectedRows() {
+  return [...document.querySelectorAll("tbody tr")]
+    .filter(r => r.querySelector(".rowCheck").checked)
+    .map(r => allRows[r.dataset.index]);
+}
+
+function updateFromSelection() {
+  const selected = getSelectedRows();
+  updateCharts(selected.length ? selected : []);
+}
+
+/* ---------- Search ---------- */
+function enableSearch() {
+  const input = document.getElementById("searchInput");
+
+  input.addEventListener("keyup", () => {
+    const term = input.value.toLowerCase();
+
+    document.querySelectorAll("tbody tr").forEach(tr => {
+      const match = tr.innerText.toLowerCase().includes(term);
+      tr.style.display = match ? "" : "none";
+      tr.querySelector(".rowCheck").checked = match;
+    });
+
+    updateFromSelection();
+  });
+}
+
+/* ---------- Aggregation (by column name) ---------- */
+function aggregate(rows) {
+  const startingPowerCol = headers.find(h => h.toLowerCase().includes("starting power"));
+  const totalKillsCol = headers.find(h => h.toLowerCase().includes("total kills"));
+  const killPointsCol = headers.find(h => h.toLowerCase().includes("kill points"));
+  const totalDeadsCol = headers.find(h => h.toLowerCase().includes("total deads"));
+
+  return {
+    startingPower: rows.reduce((a, r) => a + parseNumber(r[startingPowerCol]), 0),
+    kills: rows.reduce((a, r) => a + parseNumber(r[totalKillsCol]), 0),
+    killPoints: rows.reduce((a, r) => a + parseNumber(r[killPointsCol]), 0),
+    deads: rows.reduce((a, r) => a + parseNumber(r[totalDeadsCol]), 0)
+  };
+}
 
 /* ---------- Charts ---------- */
 function drawChart(id, label, value) {
@@ -7,15 +116,15 @@ function drawChart(id, label, value) {
   charts[id] = new Chart(document.getElementById(id), {
     type: "bar",
     data: {
-      labels: ["KVK 15"],        // single horizontal point
+      labels: ["KVK 15"],
       datasets: [{
         label,
         data: [value],
-        backgroundColor: "rgba(0,180,200,0.85)"
+        backgroundColor: CYAN
       }]
     },
     options: {
-      responsive: false,          // revert to fixed size charts
+      responsive: false,           // fixed size charts
       maintainAspectRatio: false,
       scales: {
         y: { beginAtZero: true, ticks: { callback: v => v.toLocaleString() } }
@@ -29,4 +138,13 @@ function drawChart(id, label, value) {
       }
     }
   });
+}
+
+function updateCharts(rows) {
+  const t = aggregate(rows);
+
+  drawChart("startingPowerChart", "Starting Power", t.startingPower);
+  drawChart("killsChart", "Total Kills", t.kills);
+  drawChart("killPointsChart", "Kill Points Gained", t.killPoints);
+  drawChart("deadsChart", "Total Deads", t.deads);
 }

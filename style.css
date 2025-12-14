@@ -32,22 +32,28 @@ header h1 {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
-  justify-content: space-around;
+  justify-content: center;
   margin-bottom: 2rem;
 }
 
 canvas {
-  max-width: 400px;
-  max-height: 240px;
-  flex: 1 1 400px;
+  max-width: 100%;
+  height: auto;
+  flex: 1 1 300px;
 }
 
 /* ---------- Table ---------- */
+#tableContainer {
+  overflow-x: auto; /* horizontal scroll on mobile */
+  -webkit-overflow-scrolling: touch; /* smooth scroll for iOS */
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
   background: white;
-  table-layout: fixed;
+  table-layout: fixed; /* keeps column widths stable */
+  min-width: 800px; /* prevents extreme squish */
 }
 
 th, td {
@@ -66,8 +72,15 @@ th {
 }
 
 td {
-  text-align: right;           /* numeric alignment */
-  white-space: nowrap;          /* prevent wrapping for data */
+  white-space: nowrap;         /* prevent wrapping of numeric/data cells */
+}
+
+td.numeric {
+  text-align: right;           /* numeric columns right-aligned */
+}
+
+td.text {
+  text-align: left;            /* text columns left-aligned */
 }
 
 .checkbox-cell {
@@ -76,4 +89,13 @@ td {
 
 tbody tr:hover {
   background: #f7f9fb;
+}
+
+/* Optional: hide less important columns on very small screens */
+@media (max-width: 600px) {
+  /* Example: hide column 5 and 6 */
+  /* th:nth-child(5), td:nth-child(5),
+     th:nth-child(6), td:nth-child(6) {
+       display: none;
+  } */
 }

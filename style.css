@@ -1,15 +1,25 @@
+/* ---------- Base ---------- */
+
 body {
-  font-family: Arial, sans-serif;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
   background-color: #f4f4f4;
   margin: 0;
   padding: 1rem;
+  color: #222;
 }
 
+/* ---------- Header ---------- */
+
 header h1 {
+  font-size: 22px;
+  font-weight: 600;
   text-align: center;
-  color: #333;
   margin-bottom: 1rem;
 }
+
+/* ---------- Search ---------- */
 
 #searchSection {
   text-align: center;
@@ -17,13 +27,16 @@ header h1 {
 }
 
 #searchInput {
-  padding: 0.5rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  padding: 0.45rem 0.6rem;
   width: 80%;
-  max-width: 400px;
-  font-size: 1rem;
-  border-radius: 5px;
+  max-width: 420px;
+  border-radius: 6px;
   border: 1px solid #ccc;
 }
+
+/* ---------- Charts ---------- */
 
 #charts {
   display: flex;
@@ -35,26 +48,37 @@ header h1 {
 
 canvas {
   max-width: 400px;
-  max-height: 250px;
+  max-height: 240px;
   flex: 1 1 400px;
   background-color: rgba(255,255,255,0.05);
   border-radius: 8px;
   padding: 0.5rem;
 }
 
+/* ---------- Table ---------- */
+
 table {
   width: 100%;
   border-collapse: collapse;
   background-color: #fff;
-  margin-bottom: 2rem;
-}
-
-th, td {
-  border: 1px solid #ccc;
-  padding: 0.5rem;
-  text-align: center;
 }
 
 th {
-  background-color: #eee;
+  font-size: 12.5px;
+  font-weight: 600;
+  background-color: #f0f0f0;
+  padding: 6px 8px;
+  border: 1px solid #ddd;
+  white-space: nowrap;
+}
+
+td {
+  font-size: 12.5px;
+  padding: 5px 8px;
+  border: 1px solid #eee;
+  white-space: nowrap;
+}
+
+tbody tr:hover {
+  background-color: #f7f9fb;
 }

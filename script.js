@@ -30,7 +30,6 @@ function renderTable(rows) {
   headers.forEach(h => html += `<th>${h}</th>`);
   html += "</tr></thead><tbody>";
 
-  // Define which columns are numeric
   const numericColumns = [
     "Starting Power",
     "Total Kills",
@@ -46,13 +45,13 @@ function renderTable(rows) {
 
     headers.forEach(h => {
       let val = row[h] || "";
+      let tdClass = numericColumns.includes(h) ? "numeric" : "text";
 
-      // Only numeric columns formatted
       if (numericColumns.includes(h)) {
         val = parseNumber(val).toLocaleString();
       }
 
-      html += `<td>${val}</td>`;
+      html += `<td class="${tdClass}">${val}</td>`;
     });
 
     html += "</tr>";

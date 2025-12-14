@@ -6,15 +6,12 @@ let charts = {};
 let allRows = [];
 let headers = [];
 
-/* ---------- Utilities ---------- */
-
 function parseNumber(v) {
   if (!v) return 0;
   return parseFloat(v.toString().replace(/,/g, "").replace("%", "")) || 0;
 }
 
-/* ---------- Fetch ---------- */
-
+/* ---------- Fetch data ---------- */
 fetch(sheetURL)
   .then(r => r.text())
   .then(csv => {
@@ -26,8 +23,7 @@ fetch(sheetURL)
     enableSearch();
   });
 
-/* ---------- TABLE ---------- */
-
+/* ---------- Table ---------- */
 function renderTable(rows) {
   let html = "<table><thead><tr><th>Select</th>";
 
@@ -64,7 +60,6 @@ function renderTable(rows) {
 }
 
 /* ---------- Selection ---------- */
-
 function getSelectedRows() {
   return [...document.querySelectorAll("tbody tr")]
     .filter(r => r.querySelector(".rowCheck").checked)
@@ -77,7 +72,6 @@ function updateFromSelection() {
 }
 
 /* ---------- Search ---------- */
-
 function enableSearch() {
   const input = document.getElementById("searchInput");
 
@@ -94,33 +88,26 @@ function enableSearch() {
   });
 }
 
-/* ---------- Aggregation (BY COLUMN NAME) ---------- */
-
+/* ---------- Aggregation (by column name) ---------- */
 function aggregate(rows) {
-  const sum = (col) =>
-    rows.reduce((a, r) => a + parseNumber(r[col]), 0);
-
-  const avgPercent = (col) => {
-    if (!rows.length) return 0;
-    const total = rows.reduce((a, r) => {
-      let v = parseNumber(r[col]);
-      return a + (v > 1 ? v : v * 100);
-    }, 0);
-    return total / rows.length;
-  };
+  // Column names as in the sheet
+  const startingPowerCol = headers.find(h => h.toLowerCase().includes("starting power"));
+  const totalKillsCol = headers.find(h => h.toLowerCase().includes("total kills"));
+  const killPointsCol = headers.find(h => h.toLowerCase().includes("kill points"));
+  const totalDeadsCol = headers.find(h => h.toLowerCase().includes("total deads"));
+  const nameCol = headers.find(h => h.toLowerCase() === "name"); // exact match
 
   return {
-    startingPower: sum("Starting Power"),
-    kills: sum("Total Kills"),
-    killPoints: sum("Kill Points gained (T4 + T5 only)"),
-    deads: sum("Total Deads"),
-    requirements: avgPercent("% of Requirements Complete")
+    startingPower: rows.reduce((a, r) => a + parseNumber(r[startingPowerCol]), 0),
+    kills: rows.reduce((a, r) => a + parseNumber(r[totalKillsCol]), 0),
+    killPoints: rows.reduce((a, r) => a + parseNumber(r[killPointsCol]), 0),
+    deads: rows.reduce((a, r) => a + parseNumber(r[totalDeadsCol]), 0),
+    names: rows.map(r => r[nameCol] || "")
   };
 }
 
 /* ---------- Charts ---------- */
-
-function drawChart(id, label, value, percent = false) {
+function drawChart(id, label, value) {
   if (charts[id]) charts[id].destroy();
 
   charts[id] = new Chart(document.getElementById(id), {
@@ -136,21 +123,12 @@ function drawChart(id, label, value, percent = false) {
     options: {
       responsive: true,
       scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            callback: v =>
-              percent ? `${v.toFixed(0)}%` : v.toLocaleString()
-          }
-        }
+        y: { beginAtZero: true, ticks: { callback: v => v.toLocaleString() } }
       },
       plugins: {
         tooltip: {
           callbacks: {
-            label: ctx =>
-              percent
-                ? `${ctx.raw.toFixed(0)}%`
-                : ctx.raw.toLocaleString()
+            label: ctx => ctx.raw.toLocaleString()
           }
         }
       }
@@ -165,5 +143,4 @@ function updateCharts(rows) {
   drawChart("killsChart", "Total Kills", t.kills);
   drawChart("killPointsChart", "Kill Points Gained", t.killPoints);
   drawChart("deadsChart", "Total Deads", t.deads);
-  drawChart("requirementsChart", "% Requirements Met", t.requirements, true);
 }

@@ -42,28 +42,55 @@ canvas {
   flex: 1 1 400px;
 }
 
+/* ---------- Table ---------- */
+
 table {
   width: 100%;
   border-collapse: collapse;
   background: white;
+  table-layout: fixed; /* 🔑 forces consistent column sizing */
 }
 
 th, td {
   border: 1px solid #e0e0e0;
-  padding: 5px 8px;
-  white-space: nowrap;
+  padding: 5px 6px;
   font-size: 12.5px;
 }
+
+/* ---------- Header cells ---------- */
 
 th {
   background: #f0f0f0;
   font-weight: 600;
+  text-align: center;
+
+  /* 🔑 allow wrapping */
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.2;
 }
+
+/* ---------- Data cells ---------- */
+
+td {
+  white-space: nowrap;
+  text-align: right; /* numeric columns align nicely */
+}
+
+/* ---------- Checkbox column ---------- */
+
+.checkbox-cell {
+  text-align: center;
+}
+
+/* ---------- Row hover ---------- */
 
 tbody tr:hover {
   background: #f7f9fb;
 }
 
+
 .checkbox-cell {
   text-align: center;
 }
+

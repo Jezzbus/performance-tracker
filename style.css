@@ -1,16 +1,11 @@
-/* ---------- Base ---------- */
-
 body {
   font-family: 'Inter', sans-serif;
   font-size: 13px;
-  line-height: 1.4;
   background-color: #f4f4f4;
   margin: 0;
   padding: 1rem;
   color: #222;
 }
-
-/* ---------- Header ---------- */
 
 header h1 {
   font-size: 22px;
@@ -19,15 +14,12 @@ header h1 {
   margin-bottom: 1rem;
 }
 
-/* ---------- Search ---------- */
-
 #searchSection {
   text-align: center;
   margin-bottom: 1rem;
 }
 
 #searchInput {
-  font-family: 'Inter', sans-serif;
   font-size: 13px;
   padding: 0.45rem 0.6rem;
   width: 80%;
@@ -36,13 +28,11 @@ header h1 {
   border: 1px solid #ccc;
 }
 
-/* ---------- Charts ---------- */
-
 #charts {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-around;
   gap: 1rem;
+  justify-content: space-around;
   margin-bottom: 2rem;
 }
 
@@ -50,35 +40,30 @@ canvas {
   max-width: 400px;
   max-height: 240px;
   flex: 1 1 400px;
-  background-color: rgba(255,255,255,0.05);
-  border-radius: 8px;
-  padding: 0.5rem;
 }
-
-/* ---------- Table ---------- */
 
 table {
   width: 100%;
   border-collapse: collapse;
-  background-color: #fff;
+  background: white;
+}
+
+th, td {
+  border: 1px solid #e0e0e0;
+  padding: 5px 8px;
+  white-space: nowrap;
+  font-size: 12.5px;
 }
 
 th {
-  font-size: 12.5px;
+  background: #f0f0f0;
   font-weight: 600;
-  background-color: #f0f0f0;
-  padding: 6px 8px;
-  border: 1px solid #ddd;
-  white-space: nowrap;
-}
-
-td {
-  font-size: 12.5px;
-  padding: 5px 8px;
-  border: 1px solid #eee;
-  white-space: nowrap;
 }
 
 tbody tr:hover {
-  background-color: #f7f9fb;
+  background: #f7f9fb;
+}
+
+.checkbox-cell {
+  text-align: center;
 }

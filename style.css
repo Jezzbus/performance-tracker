@@ -43,12 +43,11 @@ canvas {
 }
 
 /* ---------- Table ---------- */
-
 table {
   width: 100%;
   border-collapse: collapse;
   background: white;
-  table-layout: fixed; /* 🔑 forces consistent column sizing */
+  table-layout: fixed;
 }
 
 th, td {
@@ -57,40 +56,24 @@ th, td {
   font-size: 12.5px;
 }
 
-/* ---------- Header cells ---------- */
-
 th {
   background: #f0f0f0;
   font-weight: 600;
   text-align: center;
-
-  /* 🔑 allow wrapping */
-  white-space: normal;
+  white-space: normal;        /* wrap header text */
   word-break: break-word;
   line-height: 1.2;
 }
 
-/* ---------- Data cells ---------- */
-
 td {
-  white-space: nowrap;
-  text-align: right; /* numeric columns align nicely */
+  text-align: right;           /* numeric alignment */
+  white-space: nowrap;          /* prevent wrapping for data */
 }
-
-/* ---------- Checkbox column ---------- */
 
 .checkbox-cell {
   text-align: center;
 }
-
-/* ---------- Row hover ---------- */
 
 tbody tr:hover {
   background: #f7f9fb;
 }
-
-
-.checkbox-cell {
-  text-align: center;
-}
-

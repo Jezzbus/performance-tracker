@@ -39,9 +39,8 @@ function renderTable(rows) {
     headers.forEach(h => {
       let val = row[h] || "";
 
-      if (typeof val === "string" && val.includes("%")) {
-        val = parseNumber(val).toFixed(0) + "%";
-      } else if (!isNaN(parseNumber(val)) && val !== "") {
+      // Only parse numeric columns
+      if (["starting power","total kills","kill points","total deads"].some(k => h.toLowerCase().includes(k))) {
         val = parseNumber(val).toLocaleString();
       }
 
@@ -90,19 +89,16 @@ function enableSearch() {
 
 /* ---------- Aggregation (by column name) ---------- */
 function aggregate(rows) {
-  // Column names as in the sheet
   const startingPowerCol = headers.find(h => h.toLowerCase().includes("starting power"));
   const totalKillsCol = headers.find(h => h.toLowerCase().includes("total kills"));
   const killPointsCol = headers.find(h => h.toLowerCase().includes("kill points"));
   const totalDeadsCol = headers.find(h => h.toLowerCase().includes("total deads"));
-  const nameCol = headers.find(h => h.toLowerCase() === "name"); // exact match
 
   return {
     startingPower: rows.reduce((a, r) => a + parseNumber(r[startingPowerCol]), 0),
     kills: rows.reduce((a, r) => a + parseNumber(r[totalKillsCol]), 0),
     killPoints: rows.reduce((a, r) => a + parseNumber(r[killPointsCol]), 0),
-    deads: rows.reduce((a, r) => a + parseNumber(r[totalDeadsCol]), 0),
-    names: rows.map(r => r[nameCol] || "")
+    deads: rows.reduce((a, r) => a + parseNumber(r[totalDeadsCol]), 0)
   };
 }
 
